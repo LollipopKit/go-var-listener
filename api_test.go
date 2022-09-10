@@ -6,7 +6,7 @@ import (
 )
 
 var (
-	v Var[int]
+	v  Var[int]
 	vv int = 1
 )
 
@@ -19,13 +19,13 @@ func TestNew(t *testing.T) {
 
 func TestAddCallback(t *testing.T) {
 	v.Listen(Callback[int]{
-		fn:   func(i int) {
+		fn: func(i int) {
 			vv += 1
 		},
 		name: "add1-onboth",
 		typ:  OnBoth,
 	})
-	if len(v.callbacks.callback) != 1{
+	if len(v.callbacks) != 1 {
 		t.Error("listen failed")
 	}
 }
@@ -53,7 +53,7 @@ func TestCallback(t *testing.T) {
 
 func TestUnlisten(t *testing.T) {
 	v.Unlisten("add1-onboth")
-	if len(v.callbacks.callback) != 0 {
+	if len(v.callbacks) != 0 {
 		t.Error("unlisten failed")
 	}
 }
@@ -67,14 +67,14 @@ func TestUnlistenErr(t *testing.T) {
 
 func TestListenErr(t *testing.T) {
 	v.Listen(Callback[int]{
-		fn:   func(i int) {
+		fn: func(i int) {
 			vv += 1
 		},
 		name: "add1-onboth",
 		typ:  OnBoth,
 	})
 	err := v.Listen(Callback[int]{
-		fn:   func(i int) {
+		fn: func(i int) {
 			vv += 1
 		},
 		name: "add1-onboth",

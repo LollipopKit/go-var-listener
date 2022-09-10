@@ -18,13 +18,8 @@ type Callback[T any] struct {
 	typ  CallbackType
 }
 
-type Callbacks[T any] struct {
-	callback []Callback[T]
-	names    []string
-	lock     *sync.RWMutex
-}
-
 type Var[T any] struct {
 	value     T
-	callbacks Callbacks[T]
+	callbacks []Callback[T]
+	lock      *sync.RWMutex
 }

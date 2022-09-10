@@ -4,12 +4,9 @@ import "sync"
 
 func NewVar[T any](value T) *Var[T] {
 	return &Var[T]{
-		value: value,
-		callbacks: Callbacks[T]{
-			callback: []Callback[T]{},
-			names:    []string{},
-			lock:     &sync.RWMutex{},
-		},
+		value:     value,
+		callbacks: []Callback[T]{},
+		lock:      &sync.RWMutex{},
 	}
 }
 
@@ -17,7 +14,7 @@ func (v *Var[T]) Set(value T) {
 	v.value = value
 
 	// 赋值，防止并发修改回调函数
-	cbs := v.callbacks.callback
+	cbs := v.callbacks
 	for _, callback := range cbs {
 		if callback.typ == OnChange || callback.typ == OnBoth {
 			go callback.fn(value)
@@ -27,7 +24,7 @@ func (v *Var[T]) Set(value T) {
 
 func (v *Var[T]) Get() T {
 	value := v.value
-	cbs := v.callbacks.callback
+	cbs := v.callbacks
 	for _, cb := range cbs {
 		if cb.typ == OnGet || cb.typ == OnBoth {
 			go cb.fn(value)
@@ -37,10 +34,16 @@ func (v *Var[T]) Get() T {
 	return value
 }
 
+// 这里不返回idx，因为可能在使用完该函数后，其他进程修改了callback list，导致idx不准确
 func (v *Var[T]) HaveListen(name string) bool {
-	v.callbacks.lock.RLock()
-	defer v.callbacks.lock.RUnlock()
-	return Contains(v.callbacks.names, name)
+	v.lock.RLock()
+	defer v.lock.RUnlock()
+	for _, cb := range v.callbacks {
+		if cb.name == name {
+			return true
+		}
+	}
+	return false
 }
 
 func (v *Var[T]) Listen(callback Callback[T]) error {
@@ -48,10 +51,9 @@ func (v *Var[T]) Listen(callback Callback[T]) error {
 		return ErrSameCallbackName
 	}
 
-	v.callbacks.lock.Lock()
-	v.callbacks.callback = append(v.callbacks.callback, callback)
-	v.callbacks.names = append(v.callbacks.names, callback.name)
-	v.callbacks.lock.Unlock()
+	v.lock.Lock()
+	v.callbacks = append(v.callbacks, callback)
+	v.lock.Unlock()
 	return nil
 }
 
@@ -60,19 +62,13 @@ func (v *Var[T]) Unlisten(name string) error {
 		return ErrThisNoListenName
 	}
 
-	v.callbacks.lock.Lock()
-	for i, cb := range v.callbacks.callback {
+	v.lock.Lock()
+	for i, cb := range v.callbacks {
 		if cb.name == name {
-			v.callbacks.callback = append(v.callbacks.callback[:i], v.callbacks.callback[i+1:]...)
+			v.callbacks = append(v.callbacks[:i], v.callbacks[i+1:]...)
 			break
 		}
 	}
-	for i, cbName := range v.callbacks.names {
-		if cbName == name {
-			v.callbacks.names = append(v.callbacks.names[:i], v.callbacks.names[i+1:]...)
-			break
-		}
-	}
-	v.callbacks.lock.Unlock()
+	v.lock.Unlock()
 	return nil
 }
