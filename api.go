@@ -35,7 +35,7 @@ func (v *Var[T]) Get() T {
 }
 
 // 这里不返回idx，因为可能在使用完该函数后，其他进程修改了callback list，导致idx不准确
-func (v *Var[T]) HaveListen(name string) bool {
+func (v *Var[T]) IsListened(name string) bool {
 	v.lock.RLock()
 	defer v.lock.RUnlock()
 	for _, cb := range v.callbacks {
@@ -47,7 +47,7 @@ func (v *Var[T]) HaveListen(name string) bool {
 }
 
 func (v *Var[T]) Listen(callback Callback[T]) error {
-	if v.HaveListen(callback.name) {
+	if v.IsListened(callback.name) {
 		return ErrSameCallbackName
 	}
 
@@ -58,7 +58,7 @@ func (v *Var[T]) Listen(callback Callback[T]) error {
 }
 
 func (v *Var[T]) Unlisten(name string) error {
-	if !v.HaveListen(name) {
+	if !v.IsListened(name) {
 		return ErrThisNoListenName
 	}
 

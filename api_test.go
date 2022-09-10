@@ -85,14 +85,14 @@ func TestListenErr(t *testing.T) {
 	}
 }
 
-func TestHaveListen(t *testing.T) {
-	if !v.HaveListen("add1-onboth") {
+func TestIsListened(t *testing.T) {
+	if !v.IsListened("add1-onboth") {
 		t.Error("have listen failed")
 	}
 }
 
-func TestHaveListenErr(t *testing.T) {
-	if v.HaveListen("add1-onboth-err") {
+func TestIsListenedErr(t *testing.T) {
+	if v.IsListened("add1-onboth-err") {
 		t.Error("have listen err failed")
 	}
 }
