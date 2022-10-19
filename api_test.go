@@ -17,13 +17,19 @@ func TestNew(t *testing.T) {
 	}
 }
 
+func TestCallbackType(t *testing.T) {
+	if OnChange | OnGet | OnListen | OnUnlisten | OnError != OnAll {
+		t.Error("CallbackType failed")
+	}
+}
+
 func TestAddCallback(t *testing.T) {
 	v.Listen(Callback[int]{
 		fn: func(i int) {
 			vv += 1
 		},
 		name: "add1-onboth",
-		typ:  OnBoth,
+		typ:  OnAll,
 	})
 	if len(v.callbacks) != 1 {
 		t.Error("listen failed")
@@ -71,14 +77,14 @@ func TestListenErr(t *testing.T) {
 			vv += 1
 		},
 		name: "add1-onboth",
-		typ:  OnBoth,
+		typ:  OnAll,
 	})
 	err := v.Listen(Callback[int]{
 		fn: func(i int) {
 			vv += 1
 		},
 		name: "add1-onboth",
-		typ:  OnBoth,
+		typ:  OnAll,
 	})
 	if err != ErrSameCallbackName {
 		t.Error("listen err failed")

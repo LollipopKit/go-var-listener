@@ -4,42 +4,39 @@ import "sync"
 
 func NewVar[T any](value T) *Var[T] {
 	return &Var[T]{
-		value:     value,
+		Value:     value,
 		callbacks: []Callback[T]{},
-		lock:      &sync.RWMutex{},
+		// 这个锁是给callbacks的，更改value不需要加锁
+		lock: &sync.RWMutex{},
+	}
+}
+
+func (v *Var[T]) doCallback(typ CallbackType) {
+	// 赋值，防止并发修改回调函数
+	cbs := v.callbacks
+	for idx := range cbs {
+		if cbs[idx].typ & typ != 0 {
+			go cbs[idx].fn(v.Value)
+		}
 	}
 }
 
 func (v *Var[T]) Set(value T) {
-	v.value = value
-
-	// 赋值，防止并发修改回调函数
-	cbs := v.callbacks
-	for _, callback := range cbs {
-		if callback.typ == OnChange || callback.typ == OnBoth {
-			go callback.fn(value)
-		}
-	}
+	v.Value = value
+	v.doCallback(OnChange)
 }
 
 func (v *Var[T]) Get() T {
-	value := v.value
-	cbs := v.callbacks
-	for _, cb := range cbs {
-		if cb.typ == OnGet || cb.typ == OnBoth {
-			go cb.fn(value)
-		}
-	}
-
-	return value
+	v.doCallback(OnGet)
+	return v.Value
 }
 
 // 这里不返回idx，因为可能在使用完该函数后，其他进程修改了callback list，导致idx不准确
 func (v *Var[T]) IsListened(name string) bool {
 	v.lock.RLock()
 	defer v.lock.RUnlock()
-	for _, cb := range v.callbacks {
-		if cb.name == name {
+	for idx := range v.callbacks {
+		if v.callbacks[idx].name == name {
 			return true
 		}
 	}
@@ -48,8 +45,11 @@ func (v *Var[T]) IsListened(name string) bool {
 
 func (v *Var[T]) Listen(callback Callback[T]) error {
 	if v.IsListened(callback.name) {
+		v.doCallback(OnError)
 		return ErrSameCallbackName
 	}
+
+	v.doCallback(OnListen)
 
 	v.lock.Lock()
 	v.callbacks = append(v.callbacks, callback)
@@ -59,12 +59,15 @@ func (v *Var[T]) Listen(callback Callback[T]) error {
 
 func (v *Var[T]) Unlisten(name string) error {
 	if !v.IsListened(name) {
+		v.doCallback(OnError)
 		return ErrThisNoListenName
 	}
 
+	v.doCallback(OnUnlisten)
+
 	v.lock.Lock()
-	for i, cb := range v.callbacks {
-		if cb.name == name {
+	for i := range v.callbacks {
+		if v.callbacks[i].name == name {
 			v.callbacks = append(v.callbacks[:i], v.callbacks[i+1:]...)
 			break
 		}
