@@ -4,7 +4,7 @@ import (
 	"sync"
 )
 
-type CallbackType int
+type callbackType int
 
 const (
 	OnChange = 1 << iota
@@ -12,14 +12,14 @@ const (
 	OnListen
 	OnUnlisten
 	OnError
-	OnAll = 1 << iota - 1
+	OnAll = 1<<iota - 1
 )
 
 type Callback[T any] struct {
 	// 私有，设置后不允许更改
 	fn   func(T)
 	name string
-	typ  CallbackType
+	typ  callbackType
 }
 
 type Var[T any] struct {

@@ -18,7 +18,7 @@ func TestNew(t *testing.T) {
 }
 
 func TestCallbackType(t *testing.T) {
-	if OnChange | OnGet | OnListen | OnUnlisten | OnError != OnAll {
+	if OnChange|OnGet|OnListen|OnUnlisten|OnError != OnAll {
 		t.Error("CallbackType failed")
 	}
 }
@@ -92,13 +92,13 @@ func TestListenErr(t *testing.T) {
 }
 
 func TestIsListened(t *testing.T) {
-	if !v.IsListened("add1-onboth") {
+	if !v.IsListening("add1-onboth") {
 		t.Error("have listen failed")
 	}
 }
 
 func TestIsListenedErr(t *testing.T) {
-	if v.IsListened("add1-onboth-err") {
+	if v.IsListening("add1-onboth-err") {
 		t.Error("have listen err failed")
 	}
 }

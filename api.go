@@ -6,17 +6,17 @@ func NewVar[T any](value T) *Var[T] {
 	return &Var[T]{
 		Value:     value,
 		callbacks: []Callback[T]{},
-		// 这个锁是给callbacks的，更改value不需要加锁
-		lock: &sync.RWMutex{},
+		lock:      &sync.RWMutex{},
 	}
 }
 
-func (v *Var[T]) doCallback(typ CallbackType) {
+func (v *Var[T]) doCallback(typ callbackType) {
 	// 赋值，防止并发修改回调函数
 	cbs := v.callbacks
+	value := v.Value
 	for idx := range cbs {
-		if cbs[idx].typ & typ != 0 {
-			go cbs[idx].fn(v.Value)
+		if cbs[idx].typ&typ != 0 {
+			go cbs[idx].fn(value)
 		}
 	}
 }
@@ -32,7 +32,7 @@ func (v *Var[T]) Get() T {
 }
 
 // 这里不返回idx，因为可能在使用完该函数后，其他进程修改了callback list，导致idx不准确
-func (v *Var[T]) IsListened(name string) bool {
+func (v *Var[T]) IsListening(name string) bool {
 	v.lock.RLock()
 	defer v.lock.RUnlock()
 	for idx := range v.callbacks {
@@ -44,7 +44,7 @@ func (v *Var[T]) IsListened(name string) bool {
 }
 
 func (v *Var[T]) Listen(callback Callback[T]) error {
-	if v.IsListened(callback.name) {
+	if v.IsListening(callback.name) {
 		v.doCallback(OnError)
 		return ErrSameCallbackName
 	}
@@ -58,7 +58,7 @@ func (v *Var[T]) Listen(callback Callback[T]) error {
 }
 
 func (v *Var[T]) Unlisten(name string) error {
-	if !v.IsListened(name) {
+	if !v.IsListening(name) {
 		v.doCallback(OnError)
 		return ErrThisNoListenName
 	}
