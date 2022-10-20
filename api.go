@@ -5,7 +5,7 @@ import "sync"
 func NewVar[T any](value T) *Var[T] {
 	return &Var[T]{
 		Value:     value,
-		callbacks: []Callback[T]{},
+		callbacks: []Callback{},
 		lock:      &sync.RWMutex{},
 	}
 }
@@ -13,10 +13,9 @@ func NewVar[T any](value T) *Var[T] {
 func (v *Var[T]) doCallback(typ callbackType) {
 	// 赋值，防止并发修改回调函数
 	cbs := v.callbacks
-	value := v.Value
 	for idx := range cbs {
-		if cbs[idx].typ&typ != 0 {
-			go cbs[idx].fn(value)
+		if cbs[idx].Type & typ != 0 {
+			go cbs[idx].Fn()
 		}
 	}
 }
@@ -36,15 +35,15 @@ func (v *Var[T]) IsListening(name string) bool {
 	v.lock.RLock()
 	defer v.lock.RUnlock()
 	for idx := range v.callbacks {
-		if v.callbacks[idx].name == name {
+		if v.callbacks[idx].Name == name {
 			return true
 		}
 	}
 	return false
 }
 
-func (v *Var[T]) Listen(callback Callback[T]) error {
-	if v.IsListening(callback.name) {
+func (v *Var[T]) Listen(callback Callback) error {
+	if v.IsListening(callback.Name) {
 		v.doCallback(OnError)
 		return ErrSameCallbackName
 	}
@@ -67,7 +66,7 @@ func (v *Var[T]) Unlisten(name string) error {
 
 	v.lock.Lock()
 	for i := range v.callbacks {
-		if v.callbacks[i].name == name {
+		if v.callbacks[i].Name == name {
 			v.callbacks = append(v.callbacks[:i], v.callbacks[i+1:]...)
 			break
 		}

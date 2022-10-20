@@ -6,12 +6,11 @@ import (
 )
 
 var (
-	v  Var[int]
+	v  Var[int] = *NewVar(1)
 	vv int = 1
 )
 
 func TestNew(t *testing.T) {
-	v = *NewVar(1)
 	if v.Get() != 1 {
 		t.Error("NewVar failed")
 	}
@@ -24,12 +23,12 @@ func TestCallbackType(t *testing.T) {
 }
 
 func TestAddCallback(t *testing.T) {
-	v.Listen(Callback[int]{
-		fn: func(i int) {
+	v.Listen(Callback{
+		Fn: func() {
 			vv += 1
 		},
-		name: "add1-onboth",
-		typ:  OnAll,
+		Name: "add1-onboth",
+		Type: OnAll,
 	})
 	if len(v.callbacks) != 1 {
 		t.Error("listen failed")
@@ -72,19 +71,19 @@ func TestUnlistenErr(t *testing.T) {
 }
 
 func TestListenErr(t *testing.T) {
-	v.Listen(Callback[int]{
-		fn: func(i int) {
+	v.Listen(Callback{
+		Fn: func() {
 			vv += 1
 		},
-		name: "add1-onboth",
-		typ:  OnAll,
+		Name: "add1-onboth",
+		Type: OnAll,
 	})
-	err := v.Listen(Callback[int]{
-		fn: func(i int) {
+	err := v.Listen(Callback{
+		Fn: func() {
 			vv += 1
 		},
-		name: "add1-onboth",
-		typ:  OnAll,
+		Name: "add1-onboth",
+		Type: OnAll,
 	})
 	if err != ErrSameCallbackName {
 		t.Error("listen err failed")

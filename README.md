@@ -16,14 +16,14 @@ func main() {
 	vv := 1
 	// 新建监听
 	v := gvl.NewVar(1)
-	v.Listen(Callback[int]{
-		fn: func(i int) {
+	v.Listen(Callback{
+		Fn: func() {
 			vv += 1
 		},
 		// 该回调函数的唯一ID
-		name: "add1-onall",
+		Name: "add1-onall",
 		// 类型：改变值时、读取时调用，或者两者都调用
-		typ: gvl.OnAll,
+		Type: gvl.OnAll,
 	})
 	// 查看监听是否设置成功
 	v.IsListening("add1-onall") // true
