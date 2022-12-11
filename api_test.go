@@ -23,7 +23,7 @@ func TestCallbackType(t *testing.T) {
 }
 
 func TestAddCallback(t *testing.T) {
-	v.Listen(Callback{
+	v.Listen(&Callback{
 		Fn: func() {
 			vv += 1
 		},
@@ -71,14 +71,14 @@ func TestUnlistenErr(t *testing.T) {
 }
 
 func TestListenErr(t *testing.T) {
-	v.Listen(Callback{
+	v.Listen(&Callback{
 		Fn: func() {
 			vv += 1
 		},
 		Name: "add1-onboth",
 		Type: OnAll,
 	})
-	err := v.Listen(Callback{
+	err := v.Listen(&Callback{
 		Fn: func() {
 			vv += 1
 		},
@@ -92,25 +92,6 @@ func TestListenErr(t *testing.T) {
 
 func TestIsListened(t *testing.T) {
 	if !v.IsListening("add1-onboth") {
-		t.Error("have listen failed")
-	}
-}
-
-func TestIsListenedErr(t *testing.T) {
-	if v.IsListening("add1-onboth-err") {
-		t.Error("have listen err failed")
-	}
-}
-
-func TestSet(t *testing.T) {
-	v.Set(3)
-	if v.Get() != 3 {
-		t.Error("set failed")
-	}
-}
-
-func TestGet(t *testing.T) {
-	if v.Get() != 3 {
-		t.Error("get failed")
+		t.Error("TestIsListened failed")
 	}
 }

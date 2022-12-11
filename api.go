@@ -2,11 +2,15 @@ package govarlistener
 
 import "sync"
 
+const (
+	_maxUInt8 = ^uint8(0)
+)
+
 func NewVar[T any](value T) *Var[T] {
 	return &Var[T]{
 		Value:     value,
-		callbacks: []Callback{},
-		lock:      &sync.RWMutex{},
+		callbacks: make([]*Callback, 0, _maxUInt8),
+		lock:      new(sync.RWMutex),
 	}
 }
 
@@ -20,11 +24,13 @@ func (v *Var[T]) doCallback(typ callbackType) {
 	}
 }
 
+// 会在执行回调函数后，返回值
 func (v *Var[T]) Set(value T) {
-	v.Value = value
 	v.doCallback(OnChange)
+	v.Value = value
 }
 
+// 会在执行回调函数后，返回值
 func (v *Var[T]) Get() T {
 	v.doCallback(OnGet)
 	return v.Value
@@ -42,7 +48,7 @@ func (v *Var[T]) IsListening(name string) bool {
 	return false
 }
 
-func (v *Var[T]) Listen(callback Callback) error {
+func (v *Var[T]) Listen(callback *Callback) error {
 	if v.IsListening(callback.Name) {
 		v.doCallback(OnError)
 		return ErrSameCallbackName

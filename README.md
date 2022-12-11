@@ -16,7 +16,7 @@ func main() {
 	vv := 1
 	// 新建监听
 	v := gvl.NewVar(1)
-	v.Listen(Callback{
+	v.Listen(&gvl.Callback{
 		Fn: func() {
 			vv += 1
 		},
